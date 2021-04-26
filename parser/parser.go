@@ -9,16 +9,34 @@ import (
 	"github.com/odmishien/mahjong-parser-go/rules"
 )
 
+var ErrInvalidKind = errors.New("invalid kind of hai")
+
 func Parse(i string) (string, error) {
+	// TODO: 順番がバラバラのものが入ってきてもパースできるようにする
 	ss1 := strings.Split(i, "m")
+	if len(ss1) < 2 {
+		return "", ErrInvalidKind
+	}
 	m := ss1[0]
 	ss2 := strings.Split(ss1[1], "s")
+	if len(ss2) < 2 {
+		return "", ErrInvalidKind
+	}
 	s := ss2[0]
 	ss3 := strings.Split(ss2[1], "p")
+	if len(ss3) < 2 {
+		return "", ErrInvalidKind
+	}
 	p := ss3[0]
 	ss4 := strings.Split(ss3[1], "w")
+	if len(ss4) < 2 {
+		return "", ErrInvalidKind
+	}
 	w := ss4[0]
 	ss5 := strings.Split(ss4[1], "d")
+	if len(ss5) < 2 {
+		return "", ErrInvalidKind
+	}
 	d := ss5[0]
 
 	var result string
