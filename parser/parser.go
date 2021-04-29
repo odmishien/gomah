@@ -3,47 +3,26 @@ package parser
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/odmishien/mahjong-parser-go/rules"
 )
 
 var ErrInvalidKind = errors.New("invalid kind of hai")
+var ErrInvalidLiteral = errors.New("invalid literal of hai")
 
 func Parse(i string) (string, error) {
-	// TODO: 順番がバラバラのものが入ってきてもパースできるようにする
-	ss1 := strings.Split(i, "m")
-	if len(ss1) < 2 {
-		return "", ErrInvalidKind
+	m, err := splitByKind(i)
+	if err != nil {
+		return "", err
 	}
-	m := ss1[0]
-	ss2 := strings.Split(ss1[1], "s")
-	if len(ss2) < 2 {
-		return "", ErrInvalidKind
-	}
-	s := ss2[0]
-	ss3 := strings.Split(ss2[1], "p")
-	if len(ss3) < 2 {
-		return "", ErrInvalidKind
-	}
-	p := ss3[0]
-	ss4 := strings.Split(ss3[1], "w")
-	if len(ss4) < 2 {
-		return "", ErrInvalidKind
-	}
-	w := ss4[0]
-	ss5 := strings.Split(ss4[1], "d")
-	if len(ss5) < 2 {
-		return "", ErrInvalidKind
-	}
-	d := ss5[0]
 
 	var result string
 
 	// manzu
 	mr := rules.Man()
-	ms, err := getUnicodes(m, mr)
+	ms, err := getUnicodes(m["m"], mr)
 	if err != nil {
 		return "", err
 	}
@@ -53,7 +32,7 @@ func Parse(i string) (string, error) {
 
 	// souzu
 	sr := rules.Sou()
-	ss, err := getUnicodes(s, sr)
+	ss, err := getUnicodes(m["s"], sr)
 	if err != nil {
 		return "", err
 	}
@@ -63,7 +42,7 @@ func Parse(i string) (string, error) {
 
 	// pinzu
 	pr := rules.Pin()
-	ps, err := getUnicodes(p, pr)
+	ps, err := getUnicodes(m["p"], pr)
 	if err != nil {
 		return "", err
 	}
@@ -73,7 +52,7 @@ func Parse(i string) (string, error) {
 
 	// wind
 	wr := rules.Wind()
-	ws, err := getUnicodes(w, wr)
+	ws, err := getUnicodes(m["w"], wr)
 	if err != nil {
 		return "", err
 	}
@@ -83,7 +62,7 @@ func Parse(i string) (string, error) {
 
 	// dragon
 	dr := rules.Dragon()
-	ds, err := getUnicodes(d, dr)
+	ds, err := getUnicodes(m["d"], dr)
 	if err != nil {
 		return "", err
 	}
@@ -108,4 +87,19 @@ func getUnicodes(s string, r map[int]int) ([]int, error) {
 		ucs = append(ucs, uc)
 	}
 	return ucs, nil
+}
+
+func splitByKind(s string) (map[string]string, error) {
+	kind := []string{"m", "s", "p", "w", "d"}
+	res := make(map[string]string)
+
+	for _, k := range kind {
+		r := regexp.MustCompile(fmt.Sprintf(`([1-9]+)(%s{1})`, k))
+		g := r.FindStringSubmatch(s)
+		if len(g) < 1 {
+			return nil, ErrInvalidLiteral
+		}
+		res[k] = g[1]
+	}
+	return res, nil
 }
